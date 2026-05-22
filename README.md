@@ -7,11 +7,11 @@ Deploy guide (中文): [P34.4 OG Worker PNG 部署说明.md](https://github.com/
 
 ## Routes (PNG only — HTML meta injection is **34.5**)
 
-| Path | Behavior |
-|------|----------|
-| `GET /og/movie/:id.png?v={G}-{M}` | KV `movie:{id}` → poster + title card; KV miss → brand |
-| `GET /og/today.png?v={G}-{M}` | KV `today` + `movie:{id}`; overline `today's pick · {date}` |
-| `GET /og/brand.png?v=og-brand-og-v1` | Brand fallback |
+| Path                                 | Behavior                                                    |
+| ------------------------------------ | ----------------------------------------------------------- |
+| `GET /og/movie/:id.png?v={G}-{M}`    | KV `movie:{id}` → poster + title card; KV miss → brand      |
+| `GET /og/today.png?v={G}-{M}`        | KV `today` + `movie:{id}`; overline `today's pick · {date}` |
+| `GET /og/brand.png?v=og-brand-og-v1` | Brand fallback                                              |
 
 Wrong or missing `v` → **302** to canonical URL (immutable edge cache).
 
