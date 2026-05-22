@@ -28,11 +28,19 @@ npm install
 
 Edit `wrangler.toml` → replace `REPLACE_WITH_OG_INDEX_NAMESPACE_ID` with your KV namespace id (from `wrangler kv namespace list` or the P34.3 guide).
 
-Optional local secrets (`.dev.vars`, gitignored):
+Local secrets (gitignored):
 
-```env
-# wrangler dev uses wrangler.toml vars by default
+1. Copy `.env.example` → `.env` (or use the `.env` already synced from main-repo Cloudflare keys).
+2. Before deploy, load into the shell:
+
+```powershell
+cd E:\projects\themoviecosmos-og-worker
+. .\scripts\use-env.ps1
+wrangler whoami
+npm run deploy
 ```
+
+Wrangler does **not** read `.env` automatically; `use-env.ps1` sets `$env:CLOUDFLARE_*` for the current terminal.
 
 ## Commands
 
