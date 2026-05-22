@@ -1,0 +1,20 @@
+name = "themoviecosmos-og"
+main = "src/index.ts"
+compatibility_date = "2025-05-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Bind OG_INDEX KV (same namespace as main-repo P34.3 sync). Set id via:
+#   wrangler kv:namespace list
+#   wrangler secret / vars — or replace preview_id below for local dev.
+[[kv_namespaces]]
+binding = "OG_INDEX"
+id = "REPLACE_WITH_OG_INDEX_NAMESPACE_ID"
+preview_id = "REPLACE_WITH_OG_INDEX_NAMESPACE_ID"
+
+[assets]
+directory = "assets"
+binding = "ASSETS"
+
+[vars]
+SITE_ORIGIN = "https://themoviecosmos.com"
+LAYOUT_VERSION = "og-v1"

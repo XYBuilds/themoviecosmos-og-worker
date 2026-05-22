@@ -1,0 +1,24 @@
+{
+  "name": "themoviecosmos-og-worker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cloudflare Worker: dynamic OG PNG (/og/movie|today|brand.png) for The Movie Cosmos",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "dry-run": "wrangler deploy --dry-run"
+  },
+  "dependencies": {
+    "@resvg/resvg-wasm": "^2.6.2",
+    "satori": "^0.19.2"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250525.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4",
+    "wrangler": "^4.19.0"
+  }
+}
