@@ -5,11 +5,11 @@ compatibility_flags = ["nodejs_compat"]
 
 # Bind OG_INDEX KV (same namespace as main-repo P34.3 sync). Set id via:
 #   wrangler kv:namespace list
-#   wrangler secret / vars â€” or replace preview_id below for local dev.
+#   wrangler secret / vars â€?or replace preview_id below for local dev.
 [[kv_namespaces]]
 binding = "OG_INDEX"
-id = "REPLACE_WITH_OG_INDEX_NAMESPACE_ID"
-preview_id = "REPLACE_WITH_OG_INDEX_NAMESPACE_ID"
+id = "f4ccb8332a1e427f9929bb64e4ccc025"
+preview_id = "f4ccb8332a1e427f9929bb64e4ccc025"
 
 [assets]
 directory = "assets"
