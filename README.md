@@ -91,4 +91,6 @@ Golden fixture (Fight Club id 550): `M = 90cacf9f` — see `test/version.spec.ts
 
 ## Rollback
 
-Unbind `/og/*`, `/movie/*`, and `/today` Worker routes in dashboard; SPA + static `index.html` meta remain until 34.6.
+See main-repo **[P34.9 测试与验收回滚指南](https://github.com/XYBuilds/chronicle_v3_3d_galaxy/blob/main/docs/guides/P34.9%20%E6%B5%8B%E8%AF%95%E4%B8%8E%E9%AA%8C%E6%94%B6%E5%9B%9E%E6%BB%9A%E6%8C%87%E5%8D%97.md)** §4 (PNG-only / HTML-only / static `og-today` emergency / full Worker off).
+
+Quick: unbind `/og/*`, `/movie/*`, and `/today` Worker routes in dashboard; SPA + static `index.html` meta remain.
