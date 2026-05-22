@@ -5,6 +5,7 @@ import {
   DEFAULT_ACCENT,
   DEFAULT_BRAND,
   DEFAULT_FOOTER_URL,
+  TMDB_OG_ATTRIBUTION,
   RIGHT_X,
   TEXT_PRIMARY,
   TEXT_SECONDARY,
@@ -70,11 +71,21 @@ export async function renderBrandCardPng(
           }),
           el("div", {
             style: {
+              fontSize: 20,
+              fontWeight: 400,
+              color: TEXT_SECONDARY,
+              fontFamily: "Butler",
+              marginTop: 8,
+            },
+            children: TMDB_OG_ATTRIBUTION,
+          }),
+          el("div", {
+            style: {
               fontSize: 22,
               fontWeight: 500,
               color: TEXT_SECONDARY,
               fontFamily: "Butler",
-              marginTop: 32,
+              marginTop: 24,
               maxWidth: 720,
             },
             children:

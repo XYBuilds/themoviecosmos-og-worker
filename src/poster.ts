@@ -7,14 +7,15 @@ import {
 
 const TMDB_IMAGE_HOST = "image.tmdb.org";
 
-/** Only TMDB CDN; downgrade export w780 (etc.) to w342 for OG fetch. */
+/** Only TMDB CDN (`https://image.tmdb.org/t/p/...`); downgrade export w780 (etc.) to w342 for OG fetch. */
 export function normalizePosterUrl(url: string): string | null {
   const trimmed = url.trim();
   if (!trimmed) return null;
   try {
     const u = new URL(trimmed);
+    if (u.protocol !== "https:") return null;
     if (u.hostname !== TMDB_IMAGE_HOST) return null;
-    if (!u.protocol.startsWith("https")) return null;
+    if (!u.pathname.startsWith("/t/p/")) return null;
     u.pathname = u.pathname.replace(/\/w\d+\//i, "/w342/");
     return u.toString();
   } catch {

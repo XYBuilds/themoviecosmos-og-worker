@@ -13,6 +13,9 @@ describe("normalizePosterUrl", () => {
 
   it("rejects non-TMDB hosts", () => {
     expect(normalizePosterUrl("https://example.com/x.jpg")).toBeNull();
+    expect(normalizePosterUrl("https://www.themoviedb.org/t/p/w780/x.jpg")).toBeNull();
+    expect(normalizePosterUrl("http://image.tmdb.org/t/p/w780/x.jpg")).toBeNull();
+    expect(normalizePosterUrl("https://image.tmdb.org/evil.jpg")).toBeNull();
     expect(normalizePosterUrl("")).toBeNull();
   });
 });
