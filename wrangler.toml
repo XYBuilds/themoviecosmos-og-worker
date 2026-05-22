@@ -25,7 +25,15 @@ preview_id = "f4ccb8332a1e427f9929bb64e4ccc025"
 [assets]
 directory = "assets"
 binding = "ASSETS"
+# Route patterns overlap /og/*, /movie/*, /today* ù always run Worker first (PNG + HTML inject).
+run_worker_first = true
 
 [vars]
 SITE_ORIGIN = "https://themoviecosmos.com"
 LAYOUT_VERSION = "og-v1"
+
+# Zone routes: bind in Cloudflare Dashboard (token needs Zone ? Workers Routes Edit).
+# See docs/guides/P34.5 in main repo. Patterns:
+#   themoviecosmos.com/og/*
+#   themoviecosmos.com/movie/*
+#   themoviecosmos.com/today*
