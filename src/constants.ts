@@ -43,6 +43,8 @@ export const GENRE_PALETTE_HEX: Record<string, string> = {
 
 export const DEFAULT_BRAND = "the movie cosmos";
 export const DEFAULT_FOOTER_URL = "themoviecosmos.com";
+/** TMDB API Terms — optional OG card footer (English; social crawlers). */
+export const TMDB_OG_ATTRIBUTION = "Data from TMDB";
 
 export const POSTER_FETCH_TIMEOUT_MS = 10_000;
 export const POSTER_USER_AGENT =
