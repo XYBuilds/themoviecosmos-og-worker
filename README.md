@@ -2,7 +2,8 @@
 
 Cloudflare Worker for **Phase 34** dynamic Open Graph PNGs on `themoviecosmos.com`.
 
-Main-repo SSOT: [phase_34_social_preview_distribution.plan.md](https://github.com/XYBuilds/chronicle_v3_3d_galaxy/blob/main/.cursor/plans/phase_34_social_preview_distribution.plan.md) §34.4.
+Main-repo SSOT: [phase_34_social_preview_distribution.plan.md](https://github.com/XYBuilds/chronicle_v3_3d_galaxy/blob/main/.cursor/plans/phase_34_social_preview_distribution.plan.md) §34.4.  
+Deploy guide (中文): [P34.4 OG Worker PNG 部署说明.md](https://github.com/XYBuilds/chronicle_v3_3d_galaxy/blob/main/docs/guides/P34.4%20OG%20Worker%20PNG%20%E9%83%A8%E7%BD%B2%E8%AF%B4%E6%98%8E.md).
 
 ## Routes (PNG only — HTML meta injection is **34.5**)
 
