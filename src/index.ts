@@ -1,4 +1,16 @@
 import { PNG_CACHE_HEADERS } from "./constants";
+import {
+  buildCanonicalPageUrl,
+  fetchSpaShell,
+  HTML_RESPONSE_HEADERS,
+  injectHtmlMeta,
+  isMoviePagePath,
+  isTodayPagePath,
+  parseMoviePageId,
+  resolveMoviePageMeta,
+  resolveTodayPageMeta,
+  wantsHtmlResponse,
+} from "./html";
 import { getMetaG, getMovie, getToday } from "./kv";
 import { accentForGenre, downloadPoster } from "./poster";
 import { renderBrandCardPng } from "./render/brand";
@@ -133,6 +145,46 @@ async function handleTodayOg(env: Env, request: Request): Promise<Response> {
   return pngResponse(png);
 }
 
+async function handleMovieHtml(
+  env: Env,
+  request: Request,
+  movieId: number,
+): Promise<Response> {
+  const url = new URL(request.url);
+  const pageUrl = buildCanonicalPageUrl(env.SITE_ORIGIN, url.pathname, url.search);
+  const g = await getMetaG(env.OG_INDEX);
+  const record =
+    movieId > 0 ? await getMovie(env.OG_INDEX, movieId) : null;
+  const meta = await resolveMoviePageMeta(
+    env.SITE_ORIGIN,
+    movieId,
+    pageUrl,
+    g,
+    record,
+  );
+  const shell = await fetchSpaShell(env.SITE_ORIGIN);
+  const html = injectHtmlMeta(shell, meta);
+  return new Response(html, { headers: HTML_RESPONSE_HEADERS });
+}
+
+async function handleTodayHtml(env: Env, request: Request): Promise<Response> {
+  const url = new URL(request.url);
+  const pageUrl = buildCanonicalPageUrl(env.SITE_ORIGIN, "/today", url.search);
+  const g = await getMetaG(env.OG_INDEX);
+  const today = await getToday(env.OG_INDEX);
+  const record = today ? await getMovie(env.OG_INDEX, today.movie_id) : null;
+  const meta = await resolveTodayPageMeta(
+    env.SITE_ORIGIN,
+    pageUrl,
+    g,
+    today,
+    record,
+  );
+  const shell = await fetchSpaShell(env.SITE_ORIGIN);
+  const html = injectHtmlMeta(shell, meta);
+  return new Response(html, { headers: HTML_RESPONSE_HEADERS });
+}
+
 async function handleBrandOg(
   env: Env,
   request: Request,
@@ -179,6 +231,21 @@ export default {
       const movieId = parseMovieId(pathname);
       if (movieId !== null) {
         const res = await handleMovieOg(env, request, movieId);
+        return request.method === "HEAD"
+          ? new Response(null, { status: res.status, headers: res.headers })
+          : res;
+      }
+
+      if (isMoviePagePath(pathname) && wantsHtmlResponse(request)) {
+        const pageMovieId = parseMoviePageId(pathname) ?? 0;
+        const res = await handleMovieHtml(env, request, pageMovieId);
+        return request.method === "HEAD"
+          ? new Response(null, { status: res.status, headers: res.headers })
+          : res;
+      }
+
+      if (isTodayPagePath(pathname) && wantsHtmlResponse(request)) {
+        const res = await handleTodayHtml(env, request);
         return request.method === "HEAD"
           ? new Response(null, { status: res.status, headers: res.headers })
           : res;

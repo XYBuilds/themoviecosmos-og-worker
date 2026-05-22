@@ -5,15 +5,19 @@ Cloudflare Worker for **Phase 34** dynamic Open Graph PNGs on `themoviecosmos.co
 Main-repo SSOT: [phase_34_social_preview_distribution.plan.md](https://github.com/XYBuilds/chronicle_v3_3d_galaxy/blob/main/.cursor/plans/phase_34_social_preview_distribution.plan.md) §34.4.  
 Deploy guide (中文): [P34.4 OG Worker PNG 部署说明.md](https://github.com/XYBuilds/chronicle_v3_3d_galaxy/blob/main/docs/guides/P34.4%20OG%20Worker%20PNG%20%E9%83%A8%E7%BD%B2%E8%AF%B4%E6%98%8E.md).
 
-## Routes (PNG only — HTML meta injection is **34.5**)
+## Routes
 
 | Path                                 | Behavior                                                    |
 | ------------------------------------ | ----------------------------------------------------------- |
 | `GET /og/movie/:id.png?v={G}-{M}`    | KV `movie:{id}` → poster + title card; KV miss → brand      |
 | `GET /og/today.png?v={G}-{M}`        | KV `today` + `movie:{id}`; overline `today's pick · {date}` |
 | `GET /og/brand.png?v=og-brand-og-v1` | Brand fallback                                              |
+| `GET /movie/:id` (HTML)              | SPA `index.html` + injected `og:*` / `twitter:*` (no UA split) |
+| `GET /today` (HTML)                  | SPA shell + today-specific meta                             |
 
-Wrong or missing `v` → **302** to canonical URL (immutable edge cache).
+PNG: wrong or missing `v` → **302** to canonical URL (immutable edge cache).
+
+HTML: fetches production `/index.html` as shell; `og:url` matches request path + query (`?lang=` OK; not in PNG `v`).
 
 ## Prerequisites
 
@@ -60,11 +64,15 @@ npm run deploy        # production deploy (after route binding in dashboard)
 
 1. `npm test && npm run dry-run`
 2. `npm run deploy`
-3. In Cloudflare dashboard → **Workers Routes** (same zone as Pages):
-   - `themoviecosmos.com/og/*` → this worker (before SPA fallback)
+3. In Cloudflare dashboard → **Workers Routes** (same zone as Pages, **before** SPA fallback):
+   - `themoviecosmos.com/og/*` → this worker
+   - `themoviecosmos.com/movie/*` → this worker
+   - `themoviecosmos.com/today` → this worker
 4. Smoke:
    - `curl -I "https://themoviecosmos.com/og/brand.png?v=og-brand-og-v1"`
    - `curl -I "https://themoviecosmos.com/og/today.png"` (expect 302 with `v=`)
+   - `curl -s "https://themoviecosmos.com/movie/550" | findstr /i "og:image og:url og:title"`
+   - `curl -s "https://themoviecosmos.com/today" | findstr /i "og:image og:url"`
 
 ## Version algorithm (`v = {G}-{M}`)
 
@@ -83,4 +91,4 @@ Golden fixture (Fight Club id 550): `M = 90cacf9f` — see `test/version.spec.ts
 
 ## Rollback
 
-Unbind `/og/*` Worker routes in dashboard; SPA + static meta remain until 34.5/34.6.
+Unbind `/og/*`, `/movie/*`, and `/today` Worker routes in dashboard; SPA + static `index.html` meta remain until 34.6.
