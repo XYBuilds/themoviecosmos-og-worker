@@ -26,21 +26,25 @@ Wrong or missing `v` → **302** to canonical URL (immutable edge cache).
 npm install
 ```
 
-Edit `wrangler.toml` → replace `REPLACE_WITH_OG_INDEX_NAMESPACE_ID` with your KV namespace id (from `wrangler kv namespace list` or the P34.3 guide).
+**SSOT for secrets & KV namespace id:** `.env` (gitignored). Wrangler does **not** read `.env` by itself.
 
-Local secrets (gitignored):
-
-1. Copy `.env.example` → `.env` (or use the `.env` already synced from main-repo Cloudflare keys).
-2. Before deploy, load into the shell:
+1. Copy `.env.example` → `.env` and set `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN`, `OG_INDEX_KV_NAMESPACE_ID` (same as main-repo P34.3).
+2. Deploy (loads `.env`, syncs `wrangler.toml` KV `id` from `.env`, then `wrangler deploy`):
 
 ```powershell
 cd E:\projects\themoviecosmos-og-worker
-. .\scripts\use-env.ps1
-wrangler whoami
 npm run deploy
 ```
 
-Wrangler does **not** read `.env` automatically; `use-env.ps1` sets `$env:CLOUDFLARE_*` for the current terminal.
+Manual steps only:
+
+```powershell
+. .\scripts\use-env.ps1          # CLOUDFLARE_* for whoami
+npm run sync-wrangler            # OG_INDEX_KV_NAMESPACE_ID → wrangler.toml
+wrangler whoami
+```
+
+Do **not** hand-edit `wrangler.toml` `id` / `preview_id`; they are overwritten from `.env` on `npm run deploy` / `sync-wrangler`.
 
 ## Commands
 

@@ -1,5 +1,3 @@
-import satori from "satori";
-
 import {
   CANVAS_H,
   CANVAS_W,
@@ -19,6 +17,7 @@ import {
 import { accentForGenre } from "../poster";
 import { el, type OgElement } from "./elements";
 import type { loadOgFonts } from "./fonts";
+import { ensureRenderStack, satori } from "./init";
 import { svgToPng } from "./png";
 
 export type CardRenderInput = {
@@ -74,7 +73,7 @@ function buildCardTree(input: CardRenderInput): OgElement {
           fontSize: 22,
           fontWeight: 600,
           color: accent,
-          fontFamily: "Inter",
+          fontFamily: "Butler",
           marginBottom: 18,
         },
         children: `today's pick · ${input.todayDate}`,
@@ -88,13 +87,12 @@ function buildCardTree(input: CardRenderInput): OgElement {
         fontSize: 60,
         fontWeight: 700,
         color: TEXT_PRIMARY,
-        fontFamily: "Inter",
+        fontFamily: "Butler",
         lineHeight: 1.08,
         maxWidth: RIGHT_W,
-        display: "-webkit-box",
-        WebkitLineClamp: 2,
-        WebkitBoxOrient: "vertical",
         overflow: "hidden",
+        textOverflow: "ellipsis",
+        maxHeight: 140,
       },
       children: input.title.trim() || "Untitled",
     }),
@@ -107,7 +105,7 @@ function buildCardTree(input: CardRenderInput): OgElement {
           fontSize: 28,
           fontWeight: 500,
           color: TEXT_SECONDARY,
-          fontFamily: "Inter",
+          fontFamily: "Butler",
           marginTop: 20,
         },
         children: year,
@@ -131,7 +129,7 @@ function buildCardTree(input: CardRenderInput): OgElement {
           color: COSMOS_BLACK,
           fontSize: 22,
           fontWeight: 600,
-          fontFamily: "Inter",
+          fontFamily: "Butler",
           marginRight: 12,
         },
         children: g,
@@ -176,7 +174,7 @@ function buildCardTree(input: CardRenderInput): OgElement {
             fontSize: 20,
             fontWeight: 400,
             color: TEXT_SECONDARY,
-            fontFamily: "Inter",
+            fontFamily: "Butler",
             marginTop: 6,
           },
           children: footerUrl,
@@ -192,7 +190,7 @@ function buildCardTree(input: CardRenderInput): OgElement {
       display: "flex",
       flexDirection: "row",
       backgroundColor: COSMOS_BLACK,
-      fontFamily: "Inter",
+      fontFamily: "Butler",
     },
     children: [
       el("div", {
@@ -235,6 +233,7 @@ export async function renderMovieCardPng(
   input: CardRenderInput,
   fonts: Awaited<ReturnType<typeof loadOgFonts>>,
 ): Promise<Uint8Array> {
+  await ensureRenderStack();
   const tree = buildCardTree(input);
   const svg = await satori(tree as Parameters<typeof satori>[0], {
     width: CANVAS_W,

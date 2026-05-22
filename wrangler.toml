@@ -1,11 +1,22 @@
 name = "themoviecosmos-og"
+account_id = "f34d79a5006d4ebfa2b3f28a54cb3694"
 main = "src/index.ts"
 compatibility_date = "2025-05-01"
 compatibility_flags = ["nodejs_compat"]
 
-# Bind OG_INDEX KV (same namespace as main-repo P34.3 sync). Set id via:
-#   wrangler kv:namespace list
-#   wrangler secret / vars â€?or replace preview_id below for local dev.
+[[rules]]
+type = "CompiledWasm"
+globs = ["**/*.wasm"]
+fallthrough = true
+
+[[rules]]
+type = "Data"
+globs = ["**/*.ttf"]
+fallthrough = true
+
+# KV namespace IDs are synced from .env (OG_INDEX_KV_NAMESPACE_ID) before deploy:
+#   scripts/sync-wrangler-from-env.ps1  (also runs via npm run deploy)
+# Wrangler does NOT read .env by itself. Account/token: CLOUDFLARE_* via use-env.ps1.
 [[kv_namespaces]]
 binding = "OG_INDEX"
 id = "f4ccb8332a1e427f9929bb64e4ccc025"

@@ -1,40 +1,40 @@
-type FontBundle = {
-  name: string;
-  data: ArrayBuffer;
-  weight: 400 | 500 | 600 | 700;
-  style: "normal";
-};
+import type { FontBundle } from "./init";
+
+// Butler is static TTF. Inter.ttf in main repo is variable (fvar) — satori/opentype.js fails on Workers.
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-expect-error — TTF bundled as binary
+import butlerTtf from "../../assets/fonts/Butler-Medium.ttf";
 
 let cached: FontBundle[] | null = null;
 
-export async function loadOgFonts(assets: Fetcher): Promise<FontBundle[]> {
+function toArrayBuffer(input: unknown): ArrayBuffer {
+  if (input instanceof ArrayBuffer) return input;
+  if (input instanceof Uint8Array) {
+    const copy = input.slice();
+    return copy.buffer;
+  }
+  throw new Error(`unsupported font bundle type: ${typeof input}`);
+}
+
+export async function loadOgFonts(_assets?: Fetcher): Promise<FontBundle[]> {
   if (cached) return cached;
 
-  const [interBuf, butlerBuf] = await Promise.all([
-    assets.fetch("https://assets/fonts/Inter.ttf").then((r) => {
-      if (!r.ok) throw new Error(`Inter.ttf assets fetch ${r.status}`);
-      return r.arrayBuffer();
-    }),
-    assets.fetch("https://assets/fonts/Butler-Medium.ttf").then((r) => {
-      if (!r.ok) throw new Error(`Butler-Medium.ttf assets fetch ${r.status}`);
-      return r.arrayBuffer();
-    }),
-  ]);
+  const butlerBuf = toArrayBuffer(butlerTtf);
+  if (butlerBuf.byteLength < 256) {
+    throw new Error(`Butler-Medium.ttf bundle too small: ${butlerBuf.byteLength}`);
+  }
 
+  // Use Butler for all weights until a static Inter TTF subset is added to assets/.
   cached = [
-    { name: "Inter", data: interBuf, weight: 400, style: "normal" },
-    { name: "Inter", data: interBuf, weight: 500, style: "normal" },
-    { name: "Inter", data: interBuf, weight: 600, style: "normal" },
-    { name: "Inter", data: interBuf, weight: 700, style: "normal" },
+    { name: "Butler", data: butlerBuf, weight: 400, style: "normal" },
     { name: "Butler", data: butlerBuf, weight: 500, style: "normal" },
+    { name: "Butler", data: butlerBuf, weight: 600, style: "normal" },
+    { name: "Butler", data: butlerBuf, weight: 700, style: "normal" },
   ];
-  console.log(
-    `[og-worker] fonts loaded inter=${interBuf.byteLength} butler=${butlerBuf.byteLength}`,
-  );
+  console.log(`[og-worker] fonts bundled butler=${butlerBuf.byteLength}`);
   return cached;
 }
 
-/** Vitest / local: reset font cache between tests. */
 export function resetFontCacheForTests(): void {
   cached = null;
 }

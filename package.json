@@ -5,11 +5,12 @@
   "description": "Cloudflare Worker: dynamic OG PNG (/og/movie|today|brand.png) for The Movie Cosmos",
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
+    "sync-wrangler": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sync-wrangler-from-env.ps1",
+    "dev": "npm run sync-wrangler && wrangler dev",
+    "deploy": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/deploy.ps1",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "dry-run": "wrangler deploy --dry-run"
+    "dry-run": "npm run sync-wrangler && wrangler deploy --dry-run"
   },
   "dependencies": {
     "@resvg/resvg-wasm": "^2.6.2",

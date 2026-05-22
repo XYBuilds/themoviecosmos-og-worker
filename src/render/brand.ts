@@ -1,5 +1,3 @@
-import satori from "satori";
-
 import {
   CANVAS_H,
   CANVAS_W,
@@ -13,6 +11,7 @@ import {
 } from "../constants";
 import { el } from "./elements";
 import type { loadOgFonts } from "./fonts";
+import { ensureRenderStack, satori } from "./init";
 import { svgToPng } from "./png";
 
 export async function renderBrandCardPng(
@@ -21,6 +20,8 @@ export async function renderBrandCardPng(
 ): Promise<Uint8Array> {
   const brand = opts?.brand ?? DEFAULT_BRAND;
   const footerUrl = opts?.footerUrl ?? DEFAULT_FOOTER_URL;
+
+  await ensureRenderStack();
 
   const tree = el("div", {
     style: {
@@ -62,7 +63,7 @@ export async function renderBrandCardPng(
               fontSize: 28,
               fontWeight: 400,
               color: TEXT_SECONDARY,
-              fontFamily: "Inter",
+              fontFamily: "Butler",
               marginTop: 20,
             },
             children: footerUrl,
@@ -72,7 +73,7 @@ export async function renderBrandCardPng(
               fontSize: 22,
               fontWeight: 500,
               color: TEXT_SECONDARY,
-              fontFamily: "Inter",
+              fontFamily: "Butler",
               marginTop: 32,
               maxWidth: 720,
             },

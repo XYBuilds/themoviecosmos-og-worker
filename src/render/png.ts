@@ -1,22 +1,10 @@
-import { initWasm, Resvg } from "@resvg/resvg-wasm";
-// Wrangler bundles the WASM module at build time.
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error — .wasm module has no TS types in workers bundler
-import resvgWasm from "@resvg/resvg-wasm/index_bg.wasm";
+import { Resvg } from "@resvg/resvg-wasm";
 
 import { CANVAS_W } from "../constants";
-
-let wasmInit: Promise<void> | null = null;
-
-export function ensureResvgWasm(): Promise<void> {
-  if (!wasmInit) {
-    wasmInit = initWasm(resvgWasm);
-  }
-  return wasmInit;
-}
+import { ensureRenderStack } from "./init";
 
 export async function svgToPng(svg: string): Promise<Uint8Array> {
-  await ensureResvgWasm();
+  await ensureRenderStack();
   const resvg = new Resvg(svg, {
     fitTo: { mode: "width", value: CANVAS_W },
   });

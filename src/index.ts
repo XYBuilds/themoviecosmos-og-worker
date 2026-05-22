@@ -186,6 +186,7 @@ export default {
 
       return new Response("Not Found", { status: 404 });
     } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
       console.error(`[og-worker] unhandled error path=${pathname}`, err);
       return new Response("Internal Error", { status: 500 });
     }

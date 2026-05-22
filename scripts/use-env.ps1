@@ -17,4 +17,4 @@ Get-Content $envFile | ForEach-Object {
         Set-Item -Path "env:$name" -Value $value
     }
 }
-Write-Host "[use-env] loaded $(Join-Path $root '.env') — run wrangler whoami / npm run deploy next."
+Write-Host "[use-env] loaded $(Join-Path $root '.env') - run wrangler whoami or npm run deploy next."
