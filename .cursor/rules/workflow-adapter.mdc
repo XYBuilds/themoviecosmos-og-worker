@@ -1,0 +1,28 @@
+---
+description: OG Worker adapter for the shared execute-plan-todo workflow
+alwaysApply: false
+---
+
+# OG Worker Plan TODO adapter
+
+Apply this rule only while the shared `execute-plan-todo` skill is active.
+
+## Plans and branches
+
+- This repository currently has no local Phase plan convention. Activate the shared workflow only when the user supplies or explicitly identifies an accepted plan TODO.
+- Prefer branch names in the form `<type>/p<N.N>-<short-task-name>` when the plan provides a TODO number; otherwise ask before choosing a workflow branch name.
+- Base independent task branches on the latest `main`.
+
+## Verification
+
+- Run `npm test` for behavior changes.
+- Run `npm run typecheck` for TypeScript changes.
+- Run `npm run dry-run` only when Worker packaging or deployment configuration changes and the required local environment is available.
+- Never run `npm run deploy` without explicit deployment authorization.
+
+## Completion
+
+- Do not invent a plan status location or report path. Use the accepted plan's stated location; ask when absent.
+- Follow recent Conventional Commit style.
+- Publish through a GitHub PR and preserve required checks and branch protection.
+- Do not merge or deploy without explicit authorization.
