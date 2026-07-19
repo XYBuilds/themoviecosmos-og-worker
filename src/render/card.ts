@@ -27,8 +27,6 @@ export type CardRenderInput = {
   genres: string[];
   posterDataUrl: string | null;
   accentHex: string;
-  /** When set, shows "today's pick · {date}" overline (today route only). */
-  todayDate?: string;
   brand?: string;
   footerUrl?: string;
 };
@@ -66,21 +64,6 @@ function buildCardTree(input: CardRenderInput): OgElement {
       });
 
   const textChildren: Array<OgElement | string> = [];
-
-  if (input.todayDate) {
-    textChildren.push(
-      el("div", {
-        style: {
-          fontSize: 22,
-          fontWeight: 600,
-          color: accent,
-          fontFamily: "Butler",
-          marginBottom: 18,
-        },
-        children: `today's pick · ${input.todayDate}`,
-      }),
-    );
-  }
 
   textChildren.push(
     el("div", {

@@ -4,7 +4,6 @@ import { LAYOUT_VERSION } from "../src/constants";
 import {
   brandVersionQuery,
   computeMovieM,
-  computeTodayM,
   formatVersionQuery,
   hash8,
   parseVersionQuery,
@@ -26,7 +25,7 @@ describe("hash8", () => {
   });
 });
 
-describe("computeMovieM / computeTodayM", () => {
+describe("computeMovieM", () => {
   const movie = {
     id: 550,
     title: "Fight Club",
@@ -50,11 +49,6 @@ describe("computeMovieM / computeTodayM", () => {
     expect(m).toBe("90cacf9f"); // golden — bump when LAYOUT_VERSION / fields change
   });
 
-  it("today M includes date", async () => {
-    const m0 = await computeTodayM(movie, 0, "2026-05-08");
-    const m1 = await computeTodayM(movie, 0, "2026-05-09");
-    expect(m0).not.toBe(m1);
-  });
 });
 
 describe("version query helpers", () => {

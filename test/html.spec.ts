@@ -5,9 +5,7 @@ import {
   buildOgImageUrl,
   escapeHtmlAttr,
   formatMovieOgTitle,
-  formatTodayOgTitle,
   injectHtmlMeta,
-  isTodayPagePath,
   parseMoviePageId,
   releaseYear,
   wantsHtmlResponse,
@@ -20,11 +18,11 @@ const MINIMAL_SHELL = `<!doctype html>
   <meta property="og:title" content="The Movie Cosmos" />
   <meta property="og:description" content="old desc" />
   <meta property="og:url" content="https://themoviecosmos.com/" />
-  <meta property="og:image" content="https://themoviecosmos.com/data/og-today.png" />
+  <meta property="og:image" content="https://themoviecosmos.com/data/og-default.png" />
   <meta property="og:image:alt" content="alt" />
   <meta name="twitter:title" content="The Movie Cosmos" />
   <meta name="twitter:description" content="old tw" />
-  <meta name="twitter:image" content="https://themoviecosmos.com/data/og-today.png" />
+  <meta name="twitter:image" content="https://themoviecosmos.com/data/og-default.png" />
 </head>
 <body></body>
 </html>`;
@@ -41,11 +39,6 @@ describe("path parsing", () => {
     expect(parseMoviePageId("/og/movie/1.png")).toBeNull();
   });
 
-  it("isTodayPagePath", () => {
-    expect(isTodayPagePath("/today")).toBe(true);
-    expect(isTodayPagePath("/today/")).toBe(true);
-    expect(isTodayPagePath("/")).toBe(false);
-  });
 });
 
 describe("wantsHtmlResponse", () => {
@@ -70,11 +63,6 @@ describe("title formatting", () => {
     );
   });
 
-  it("today title includes The Movie Today", () => {
-    expect(formatTodayOgTitle("Dune", "2021-10-01")).toBe(
-      "The Movie Today — Dune (2021) — The Movie Cosmos",
-    );
-  });
 });
 
 describe("injectHtmlMeta", () => {
@@ -88,7 +76,7 @@ describe("injectHtmlMeta", () => {
     });
     expect(out).toContain('property="og:url" content="https://themoviecosmos.com/movie/550"');
     expect(out).toContain('property="og:image" content="https://themoviecosmos.com/og/movie/550.png?v=g-m"');
-    expect(out).not.toContain("og-today.png");
+    expect(out).not.toContain("og-default.png");
     expect(out).toContain("<title>Fight Club (1999) — The Movie Cosmos</title>");
   });
 
@@ -118,7 +106,7 @@ describe("URL builders", () => {
 
   it("buildOgImageUrl sets v param", () => {
     expect(
-      buildOgImageUrl("https://themoviecosmos.com", "/og/today.png", "G-M"),
-    ).toBe("https://themoviecosmos.com/og/today.png?v=G-M");
+      buildOgImageUrl("https://themoviecosmos.com", "/og/movie/550.png", "G-M"),
+    ).toBe("https://themoviecosmos.com/og/movie/550.png?v=G-M");
   });
 });

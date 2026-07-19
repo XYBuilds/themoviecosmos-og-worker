@@ -40,24 +40,6 @@ export async function computeMovieM(
   ]);
 }
 
-/** Content fingerprint `M` for `/og/today.png` (includes UTC pick date). */
-export async function computeTodayM(
-  movie: OgMovieFields,
-  placeholderFlag: 0 | 1,
-  todayDate: string,
-): Promise<string> {
-  return hash8([
-    LAYOUT_VERSION,
-    movie.id,
-    movie.title,
-    movie.release_date,
-    movie.genres[0] ?? "",
-    movie.poster_url,
-    placeholderFlag,
-    todayDate,
-  ]);
-}
-
 export function formatVersionQuery(g: string, m: string): string {
   return `${g}-${m}`;
 }
