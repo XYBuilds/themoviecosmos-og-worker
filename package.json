@@ -2,7 +2,7 @@
   "name": "themoviecosmos-og-worker",
   "version": "0.1.0",
   "private": true,
-  "description": "Cloudflare Worker: dynamic OG PNG (/og/movie|today|brand.png) for The Movie Cosmos",
+  "description": "Cloudflare Worker: dynamic OG PNG (/og/movie|brand.png) for The Movie Cosmos",
   "type": "module",
   "scripts": {
     "sync-wrangler": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sync-wrangler-from-env.ps1",

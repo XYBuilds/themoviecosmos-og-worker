@@ -10,10 +10,10 @@ Deploy guide (中文): [P34.4 OG Worker PNG 部署说明.md](https://github.com/
 | Path                                 | Behavior                                                    |
 | ------------------------------------ | ----------------------------------------------------------- |
 | `GET /og/movie/:id.png?v={G}-{M}`    | KV `movie:{id}` → poster + title card; KV miss → brand      |
-| `GET /og/today.png?v={G}-{M}`        | KV `today` + `movie:{id}`; overline `today's pick · {date}` |
 | `GET /og/brand.png?v=og-brand-og-v1` | Brand fallback                                              |
 | `GET /movie/:id` (HTML)              | SPA `index.html` + injected `og:*` / `twitter:*` (no UA split) |
-| `GET /today` (HTML)                  | SPA shell + today-specific meta                             |
+
+`/today` and `/og/today.png` are retired and return `404 Not Found` for `GET` and `HEAD`, including query strings. Keep `themoviecosmos.com/today*` bound to this Worker ahead of the Pages fallback so it cannot serve the SPA shell.
 
 PNG: wrong or missing `v` → **302** to canonical URL (immutable edge cache).
 
@@ -21,7 +21,7 @@ HTML: fetches production `/index.html` as shell; `og:url` matches request path +
 
 ## Prerequisites
 
-1. **P34.3** KV namespace `OG_INDEX` populated (`meta:G`, `today`, `movie:*`). See main-repo `docs/guides/P34.3 OG Index KV 上线操作指南.md`.
+1. **P34.3** KV namespace `OG_INDEX` populated (`meta:G`, `movie:*`). See main-repo `docs/guides/P34.3 OG Index KV 上线操作指南.md`.
 2. Cloudflare account with Workers deploy permission.
 
 ## Setup
@@ -67,25 +67,23 @@ npm run deploy        # production deploy (after route binding in dashboard)
 3. In Cloudflare dashboard → **Workers Routes** (same zone as Pages, **before** SPA fallback):
    - `themoviecosmos.com/og/*` → this worker
    - `themoviecosmos.com/movie/*` → this worker
-   - `themoviecosmos.com/today` → this worker
+   - `themoviecosmos.com/today*` → this worker (retired URL guard; returns 404 before Pages fallback)
 4. Smoke:
    - `curl -I "https://themoviecosmos.com/og/brand.png?v=og-brand-og-v1"`
-   - `curl -I "https://themoviecosmos.com/og/today.png"` (expect 302 with `v=`)
    - `curl -s "https://themoviecosmos.com/movie/550" | findstr /i "og:image og:url og:title"`
-   - `curl -s "https://themoviecosmos.com/today" | findstr /i "og:image og:url"`
+   - `curl -s -o NUL -w "%{http_code}" "https://themoviecosmos.com/today?lang=zh"` (expect `404`)
 
 ## Version algorithm (`v = {G}-{M}`)
 
 - **`G`**: KV `meta:G` (`galaxy_data.json` `meta.version`)
 - **`M`**: `hash8(layoutVersion, id, title, release_date, genres[0], poster_url, placeholderFlag)`
-- **Today**: same fields + `today.date` in hash input
 - **`layoutVersion`**: `og-v1` (env `LAYOUT_VERSION`)
 
 Golden fixture (Fight Club id 550): `M = 90cacf9f` — see `test/version.spec.ts`.
 
 ## Rendering stack
 
-- Layout ported from main-repo `scripts/cron/render_og_today.py` (1200×630, genre palette, Butler brand).
+- Layout ported from main-repo movie OG renderer (1200×630, genre palette, Butler brand).
 - **Satori** → SVG → **@resvg/resvg-wasm** → PNG (Workers-compatible; no DOM canvas).
 - Posters: TMDB `image.tmdb.org` only; `w780` → `w342`; failure → accent placeholder (`placeholderFlag=1`).
 
@@ -93,4 +91,4 @@ Golden fixture (Fight Club id 550): `M = 90cacf9f` — see `test/version.spec.ts
 
 See main-repo **[P34.9 测试与验收回滚指南](https://github.com/XYBuilds/chronicle_v3_3d_galaxy/blob/main/docs/guides/P34.9%20%E6%B5%8B%E8%AF%95%E4%B8%8E%E9%AA%8C%E6%94%B6%E5%9B%9E%E6%BB%9A%E6%8C%87%E5%8D%97.md)** §4 (PNG-only / HTML-only / static `og-today` emergency / full Worker off).
 
-Quick: unbind `/og/*`, `/movie/*`, and `/today` Worker routes in dashboard; SPA + static `index.html` meta remain.
+Quick: unbind `/og/*` and `/movie/*` Worker routes in dashboard; SPA + static `index.html` meta remain. Keep the retired `/today*` route bound so Pages cannot turn it back into an SPA response.

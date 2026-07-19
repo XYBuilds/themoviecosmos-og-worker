@@ -1,5 +1,5 @@
-import { brandVersionQuery, computeMovieM, computeTodayM, formatVersionQuery } from "./version";
-import type { MovieKvRecord, TodayKvRecord } from "./kv";
+import { brandVersionQuery, computeMovieM, formatVersionQuery } from "./version";
+import type { MovieKvRecord } from "./kv";
 import type { OgMovieFields } from "./version";
 
 export const BRAND_OG_TITLE = "The Movie Cosmos";
@@ -27,10 +27,6 @@ export function parseMoviePageId(pathname: string): number | null {
   return Number.isFinite(id) && id > 0 ? id : null;
 }
 
-export function isTodayPagePath(pathname: string): boolean {
-  return pathname === "/today" || pathname === "/today/";
-}
-
 export function wantsHtmlResponse(request: Request): boolean {
   const accept = request.headers.get("Accept") ?? "";
   if (!accept.trim()) return true;
@@ -47,12 +43,6 @@ export function releaseYear(releaseDate: string): string | null {
 export function formatMovieOgTitle(title: string, releaseDate: string): string {
   const year = releaseYear(releaseDate);
   return year ? `${title} (${year}) — ${BRAND_OG_TITLE}` : `${title} — ${BRAND_OG_TITLE}`;
-}
-
-export function formatTodayOgTitle(title: string, releaseDate: string): string {
-  const year = releaseYear(releaseDate);
-  const core = year ? `${title} (${year})` : title;
-  return `The Movie Today — ${core} — ${BRAND_OG_TITLE}`;
 }
 
 export function buildCanonicalPageUrl(origin: string, pathname: string, search: string): string {
@@ -161,44 +151,6 @@ export async function resolveMoviePageMeta(
     description: SHORT_OG_DESCRIPTION,
     ogUrl: pageUrl,
     ogImage: buildOgImageUrl(origin, `/og/movie/${movieId}.png`, v),
-    ogImageAlt: title,
-  };
-}
-
-export async function resolveTodayPageMeta(
-  origin: string,
-  pageUrl: string,
-  g: string | null,
-  today: TodayKvRecord | null,
-  record: MovieKvRecord | null,
-): Promise<HtmlMetaPayload> {
-  if (!g || !today || !record) {
-    const v = brandVersionQuery();
-    return {
-      title: BRAND_OG_TITLE,
-      description: SHORT_OG_DESCRIPTION,
-      ogUrl: pageUrl,
-      ogImage: buildOgImageUrl(origin, "/og/brand.png", v),
-      ogImageAlt: BRAND_OG_TITLE,
-    };
-  }
-
-  const movie: OgMovieFields = {
-    id: today.movie_id,
-    title: record.title,
-    release_date: record.release_date,
-    genres: record.genres,
-    poster_url: record.poster_url,
-  };
-  const m = await computeTodayM(movie, 0, today.date);
-  const v = formatVersionQuery(g, m);
-  const title = formatTodayOgTitle(record.title, record.release_date);
-
-  return {
-    title,
-    description: SHORT_OG_DESCRIPTION,
-    ogUrl: pageUrl,
-    ogImage: buildOgImageUrl(origin, "/og/today.png", v),
     ogImageAlt: title,
   };
 }

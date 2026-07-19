@@ -5,13 +5,11 @@ import {
   HTML_RESPONSE_HEADERS,
   injectHtmlMeta,
   isMoviePagePath,
-  isTodayPagePath,
   parseMoviePageId,
   resolveMoviePageMeta,
-  resolveTodayPageMeta,
   wantsHtmlResponse,
 } from "./html";
-import { getMetaG, getMovie, getToday } from "./kv";
+import { getMetaG, getMovie } from "./kv";
 import { accentForGenre, downloadPoster } from "./poster";
 import { renderBrandCardPng } from "./render/brand";
 import { renderMovieCardPng } from "./render/card";
@@ -19,7 +17,6 @@ import { loadOgFonts } from "./render/fonts";
 import {
   brandVersionQuery,
   computeMovieM,
-  computeTodayM,
   formatVersionQuery,
   type OgMovieFields,
 } from "./version";
@@ -38,6 +35,13 @@ function redirectCanonical(url: URL): Response {
   return Response.redirect(url.toString(), 302);
 }
 
+function notFoundResponse(method: string): Response {
+  return new Response(method === "HEAD" ? null : "Not Found", {
+    status: 404,
+    statusText: "Not Found",
+  });
+}
+
 function parseMovieId(pathname: string): number | null {
   const m = pathname.match(/^\/og\/movie\/(\d+)\.png$/i);
   if (!m) return null;
@@ -48,7 +52,7 @@ function parseMovieId(pathname: string): number | null {
 async function renderFromMovieFields(
   env: Env,
   movie: OgMovieFields,
-  opts: { todayDate?: string; posterDataUrl: string | null },
+  opts: { posterDataUrl: string | null },
 ): Promise<Uint8Array> {
   const accent = accentForGenre(movie.genres);
   const fonts = await loadOgFonts(env.ASSETS);
@@ -59,7 +63,6 @@ async function renderFromMovieFields(
       genres: movie.genres,
       posterDataUrl: opts.posterDataUrl,
       accentHex: accent,
-      todayDate: opts.todayDate,
     },
     fonts,
   );
@@ -105,46 +108,6 @@ async function handleMovieOg(
   return pngResponse(png);
 }
 
-async function handleTodayOg(env: Env, request: Request): Promise<Response> {
-  const url = new URL(request.url);
-  const g = await getMetaG(env.OG_INDEX);
-  const today = await getToday(env.OG_INDEX);
-  if (!g || !today) {
-    console.log("[og-worker] today or meta:G missing → brand");
-    return handleBrandOg(env, request, true);
-  }
-
-  const record = await getMovie(env.OG_INDEX, today.movie_id);
-  if (!record) {
-    console.log(`[og-worker] today movie:${today.movie_id} miss → brand`);
-    return handleBrandOg(env, request, true);
-  }
-
-  const movie: OgMovieFields = {
-    id: today.movie_id,
-    title: record.title,
-    release_date: record.release_date,
-    genres: record.genres,
-    poster_url: record.poster_url,
-  };
-
-  const { dataUrl, placeholderFlag } = await downloadPoster(movie.poster_url);
-  const m = await computeTodayM(movie, placeholderFlag, today.date);
-  const canonicalV = formatVersionQuery(g, m);
-  const reqV = url.searchParams.get("v");
-
-  if (reqV !== canonicalV) {
-    url.searchParams.set("v", canonicalV);
-    return redirectCanonical(url);
-  }
-
-  const png = await renderFromMovieFields(env, movie, {
-    todayDate: today.date,
-    posterDataUrl: dataUrl,
-  });
-  return pngResponse(png);
-}
-
 async function handleMovieHtml(
   env: Env,
   request: Request,
@@ -160,24 +123,6 @@ async function handleMovieHtml(
     movieId,
     pageUrl,
     g,
-    record,
-  );
-  const shell = await fetchSpaShell(env.SITE_ORIGIN);
-  const html = injectHtmlMeta(shell, meta);
-  return new Response(html, { headers: HTML_RESPONSE_HEADERS });
-}
-
-async function handleTodayHtml(env: Env, request: Request): Promise<Response> {
-  const url = new URL(request.url);
-  const pageUrl = buildCanonicalPageUrl(env.SITE_ORIGIN, "/today", url.search);
-  const g = await getMetaG(env.OG_INDEX);
-  const today = await getToday(env.OG_INDEX);
-  const record = today ? await getMovie(env.OG_INDEX, today.movie_id) : null;
-  const meta = await resolveTodayPageMeta(
-    env.SITE_ORIGIN,
-    pageUrl,
-    g,
-    today,
     record,
   );
   const shell = await fetchSpaShell(env.SITE_ORIGIN);
@@ -221,13 +166,6 @@ export default {
           : res;
       }
 
-      if (pathname === "/og/today.png") {
-        const res = await handleTodayOg(env, request);
-        return request.method === "HEAD"
-          ? new Response(null, { status: res.status, headers: res.headers })
-          : res;
-      }
-
       const movieId = parseMovieId(pathname);
       if (movieId !== null) {
         const res = await handleMovieOg(env, request, movieId);
@@ -244,14 +182,7 @@ export default {
           : res;
       }
 
-      if (isTodayPagePath(pathname) && wantsHtmlResponse(request)) {
-        const res = await handleTodayHtml(env, request);
-        return request.method === "HEAD"
-          ? new Response(null, { status: res.status, headers: res.headers })
-          : res;
-      }
-
-      return new Response("Not Found", { status: 404 });
+      return notFoundResponse(request.method);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error(`[og-worker] unhandled error path=${pathname}`, err);
