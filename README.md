@@ -1,19 +1,20 @@
 # themoviecosmos-og-worker
 
-Cloudflare Worker for **Phase 34** dynamic Open Graph PNGs on `themoviecosmos.com`.
+Cloudflare Worker for the movie Open Graph routes on `themoviecosmos.com`.
 
-Main-repo SSOT: [phase_34_social_preview_distribution.plan.md](https://github.com/XYBuilds/chronicle_v3_3d_galaxy/blob/main/.cursor/plans/phase_34_social_preview_distribution.plan.md) §34.4.  
-Deploy guide (中文): [P34.4 OG Worker PNG 部署说明.md](https://github.com/XYBuilds/chronicle_v3_3d_galaxy/blob/main/docs/guides/P34.4%20OG%20Worker%20PNG%20%E9%83%A8%E7%BD%B2%E8%AF%B4%E6%98%8E.md).
+**Current cross-repository contract:** [Chronicle OG Index / OG Worker contract](https://github.com/XYBuilds/chronicle_v3_3d_galaxy/blob/main/docs/system/og-index-worker-contract.md). It defines the producer/consumer boundary and observable compatibility rules. This README remains authoritative for Worker-local implementation, configuration, testing, and deployment.
+
+**Historical note:** Phase 34 deployment guides and plans are evidence only. Do not execute their Today steps; `/today`, `/og/today.png`, `/share/today`, and KV `today` are retired.
 
 ## Routes
 
-| Path                                 | Behavior                                                    |
-| ------------------------------------ | ----------------------------------------------------------- |
-| `GET /og/movie/:id.png?v={G}-{M}`    | KV `movie:{id}` → poster + title card; KV miss → brand      |
-| `GET /og/brand.png?v=og-brand-og-v1` | Brand fallback                                              |
-| `GET /movie/:id` (HTML)              | SPA `index.html` + injected `og:*` / `twitter:*` (no UA split) |
+| Path | Behavior |
+| --- | --- |
+| `GET /og/movie/:id.png?v={G}-{M}` | KV `movie:{id}` → poster + title card; missing or unreadable KV data → brand PNG |
+| `GET /og/brand.png?v=og-brand-og-v1` | Brand fallback |
+| `GET /movie/:id` (HTML) | SPA `index.html` + injected `og:*` / `twitter:*` (no UA split) |
 
-`/today` and `/og/today.png` are retired and return `404 Not Found` for `GET` and `HEAD`, including query strings. Keep `themoviecosmos.com/today*` bound to this Worker ahead of the Pages fallback so it cannot serve the SPA shell.
+> **Retired routes — do not execute as active setup:** `/today`, `/og/today.png`, and `/share/today` return side-effect-free `404 Not Found` for `GET` and `HEAD`, including query strings. Keep the retired paths bound to this Worker ahead of the Pages fallback so they cannot serve the SPA shell. Reuse requires an explicit contract migration.
 
 PNG: wrong or missing `v` → **302** to canonical URL (immutable edge cache).
 
@@ -21,8 +22,9 @@ HTML: fetches production `/index.html` as shell; `og:url` matches request path +
 
 ## Prerequisites
 
-1. **P34.3** KV namespace `OG_INDEX` populated (`meta:G`, `movie:*`). See main-repo `docs/guides/P34.3 OG Index KV 上线操作指南.md`.
-2. Cloudflare account with Workers deploy permission.
+1. **Current OG Index contract:** [Chronicle `og-index-worker-contract.md`](https://github.com/XYBuilds/chronicle_v3_3d_galaxy/blob/main/docs/system/og-index-worker-contract.md).
+2. **P34.3 current movie-only KV projection:** KV namespace `OG_INDEX` populated with `meta:G` and `movie:*`. See [P34.3 OG Index KV 上线操作指南](https://github.com/XYBuilds/chronicle_v3_3d_galaxy/blob/main/docs/guides/P34.3%20OG%20Index%20KV%20上线操作指南.md).
+3. Cloudflare account with Workers deploy permission.
 
 ## Setup
 
@@ -67,7 +69,7 @@ npm run deploy        # production deploy (after route binding in dashboard)
 3. In Cloudflare dashboard → **Workers Routes** (same zone as Pages, **before** SPA fallback):
    - `themoviecosmos.com/og/*` → this worker
    - `themoviecosmos.com/movie/*` → this worker
-   - `themoviecosmos.com/today*` → this worker (retired URL guard; returns 404 before Pages fallback)
+   - `themoviecosmos.com/today*` → this worker (retired-route guard; returns 404 before Pages fallback)
 4. Smoke:
    - `curl -I "https://themoviecosmos.com/og/brand.png?v=og-brand-og-v1"`
    - `curl -s "https://themoviecosmos.com/movie/550" | findstr /i "og:image og:url og:title"`
@@ -75,9 +77,10 @@ npm run deploy        # production deploy (after route binding in dashboard)
 
 ## Version algorithm (`v = {G}-{M}`)
 
-- **`G`**: KV `meta:G` (`galaxy_data.json` `meta.version`)
-- **`M`**: `hash8(layoutVersion, id, title, release_date, genres[0], poster_url, placeholderFlag)`
-- **`layoutVersion`**: `og-v1` (env `LAYOUT_VERSION`)
+- **`G`**: KV `meta:G`. The current Chronicle producer derives it from `galaxy_data.json` `meta.version`; the Worker treats it as an opaque, non-empty generation.
+- **`M`**: Worker-owned `hash8(layoutVersion, id, title, release_date, genres[0], poster_url, placeholderFlag)`.
+- **`layoutVersion`**: `og-v1` (`src/constants.ts` `LAYOUT_VERSION`).
+- **HTML/PNG edge case:** HTML computes the normal-poster `M` before poster download. PNG computes `M` after download; a failed poster may cause one extra canonical `302` to the placeholder version. This is a known runtime behavior, not a permanent redirect-count guarantee.
 
 Golden fixture (Fight Club id 550): `M = 90cacf9f` — see `test/version.spec.ts`.
 
@@ -89,6 +92,13 @@ Golden fixture (Fight Club id 550): `M = 90cacf9f` — see `test/version.spec.ts
 
 ## Rollback
 
-See main-repo **[P34.9 测试与验收回滚指南](https://github.com/XYBuilds/chronicle_v3_3d_galaxy/blob/main/docs/guides/P34.9%20%E6%B5%8B%E8%AF%95%E4%B8%8E%E9%AA%8C%E6%94%B6%E5%9B%9E%E6%BB%9A%E6%8C%87%E5%8D%97.md)** §4 (PNG-only / HTML-only / static `og-today` emergency / full Worker off).
+Cross-repository breaking changes use a **coordinated best-effort cutover**, not an atomic deployment. If a cutover fails:
 
-Quick: unbind `/og/*` and `/movie/*` Worker routes in dashboard; SPA + static `index.html` meta remain. Keep the retired `/today*` route bound so Pages cannot turn it back into an SPA response.
+1. Stop or roll back the Chronicle producer first so it cannot expand incompatible KV state.
+2. Roll back this Worker.
+3. Retain newly written KV keys and values for diagnosis; do not delete production state as an emergency reflex.
+4. Repair or replay through the producer's explicit recovery path.
+
+For the Worker-only rollback procedure, see the [Chronicle current contract](https://github.com/XYBuilds/chronicle_v3_3d_galaxy/blob/main/docs/system/og-index-worker-contract.md). The historical [P34.9 测试与验收回滚指南](https://github.com/XYBuilds/chronicle_v3_3d_galaxy/blob/main/docs/guides/P34.9%20%E6%B5%8B%E8%AF%95%E4%B8%8E%E9%AA%8C%E6%94%B6%E5%9B%9E%E6%BB%9A%E6%8C%87%E5%8D%97.md) is evidence only; do not execute its Today recovery steps.
+
+Quick Worker-only rollback: unbind `/og/*` and `/movie/*` Worker routes in the dashboard if the Pages fallback is intentionally accepted. Keep the retired `/today*` route bound so Pages cannot turn it back into an SPA response.
