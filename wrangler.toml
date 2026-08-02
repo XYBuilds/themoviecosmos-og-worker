@@ -25,15 +25,28 @@ preview_id = "f4ccb8332a1e427f9929bb64e4ccc025"
 [assets]
 directory = "assets"
 binding = "ASSETS"
-# Route patterns overlap /og/*, /movie/*, and retired /today* → always run Worker first (PNG + HTML inject or 404).
+# Route patterns overlap /og/*, /movie/*, and retired /today* and /share/today* → always run Worker first (PNG + HTML inject or 404).
 run_worker_first = true
 
 [vars]
 SITE_ORIGIN = "https://themoviecosmos.com"
 LAYOUT_VERSION = "og-v1"
 
-# Zone routes: bind in Cloudflare Dashboard (token needs Zone ? Workers Routes Edit).
-# See docs/guides/P34.5 in main repo. Patterns:
-#   themoviecosmos.com/og/*
-#   themoviecosmos.com/movie/*
-#   themoviecosmos.com/today*  (retired URL guard: Worker 404 before Pages fallback)
+# Route patterns are managed by Wrangler and require Workers Routes: Edit.
+[[routes]]
+pattern = "themoviecosmos.com/og/*"
+zone_name = "themoviecosmos.com"
+
+[[routes]]
+pattern = "themoviecosmos.com/movie/*"
+zone_name = "themoviecosmos.com"
+
+[[routes]]
+pattern = "themoviecosmos.com/today*"
+zone_name = "themoviecosmos.com"
+
+# Cloudflare route patterns cannot contain query parameters, so the wildcard
+# is required to match /share/today?lang=zh as well as the retired exact path.
+[[routes]]
+pattern = "themoviecosmos.com/share/today*"
+zone_name = "themoviecosmos.com"
