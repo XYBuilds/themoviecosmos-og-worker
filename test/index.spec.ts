@@ -56,80 +56,59 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-describe("retired Today URLs", () => {
-  type RetiredRouteCase = {
+describe("unknown /og paths", () => {
+  type UnknownOgCase = {
     path: string;
     method: "GET" | "HEAD";
     accept?: "text/html" | "image/png" | "*/*";
   };
 
-  const todayCases: RetiredRouteCase[] = [
-    { path: "/today", method: "GET", accept: "text/html" },
-    { path: "/today", method: "HEAD", accept: "image/png" },
-    { path: "/today?lang=zh", method: "GET", accept: "*/*" },
-    { path: "/today?lang=zh", method: "HEAD" },
-  ];
-  const todayImageCases: RetiredRouteCase[] = [
+  const todayImageCases: UnknownOgCase[] = [
     { path: "/og/today.png", method: "GET", accept: "image/png" },
     { path: "/og/today.png", method: "HEAD", accept: "*/*" },
     { path: "/og/today.png?cache=bust", method: "GET", accept: "text/html" },
     { path: "/og/today.png?cache=bust", method: "HEAD" },
   ];
 
-  for (const { path, method, accept } of [...todayCases, ...todayImageCases]) {
-    it(`${method} ${path} returns a side-effect-free 404`, async () => {
-      const kvGet = vi.fn();
-      const originFetch = vi.fn();
-      vi.stubGlobal("fetch", originFetch);
-
-      const response = await fetchWorker(
-        path,
-        { method, headers: accept ? { Accept: accept } : undefined },
-        makeEnv(kvGet),
-      );
-
-      expect(response.status).toBe(404);
-      expect(response.statusText).toBe("Not Found");
-      const contentType = response.headers.get("Content-Type") ?? "";
-      expect(contentType).not.toContain("image/png");
-      expect(contentType).not.toContain("text/html");
-      expect(kvGet).not.toHaveBeenCalled();
-      expect(originFetch).not.toHaveBeenCalled();
-      expect(renderBrandCardPng).not.toHaveBeenCalled();
-      expect(renderMovieCardPng).not.toHaveBeenCalled();
-      if (method === "GET") {
-        await expect(response.text()).resolves.toBe("Not Found");
-      } else {
-        expect(response.body).toBeNull();
-      }
-    });
+  function ordinaryUnknownOgPath(path: string): string {
+    const url = new URL(path, "https://themoviecosmos.com");
+    return `/og/unknown.png${url.search}`;
   }
 
-  const shareCases: Array<Pick<RetiredRouteCase, "path" | "method">> = [
-    { path: "/share/today", method: "GET" },
-    { path: "/share/today", method: "HEAD" },
-    { path: "/share/today?lang=zh", method: "GET" },
-    { path: "/share/today?lang=zh", method: "HEAD" },
-  ];
-
-  for (const { path, method } of shareCases) {
-    it(`${method} ${path} does not fall back to an active route`, async () => {
+  for (const { path, method, accept } of todayImageCases) {
+    it(`${method} ${path} matches an ordinary unknown /og path`, async () => {
       const kvGet = vi.fn();
       const originFetch = vi.fn();
       vi.stubGlobal("fetch", originFetch);
+      const env = makeEnv(kvGet);
+      const headers = accept ? { Accept: accept } : undefined;
 
-      const response = await fetchWorker(path, { method }, makeEnv(kvGet));
+      const todayOg = await fetchWorker(path, { method, headers }, env);
+      const unknownOg = await fetchWorker(
+        ordinaryUnknownOgPath(path),
+        { method, headers },
+        env,
+      );
 
-      expect(response.status).toBe(404);
-      expect(response.statusText).toBe("Not Found");
+      expect(unknownOg.status).toBe(404);
+      expect(unknownOg.statusText).toBe("Not Found");
+      expect(todayOg.status).toBe(unknownOg.status);
+      expect(todayOg.statusText).toBe(unknownOg.statusText);
+      expect(todayOg.headers.get("Content-Type")).toBe(
+        unknownOg.headers.get("Content-Type"),
+      );
       expect(kvGet).not.toHaveBeenCalled();
       expect(originFetch).not.toHaveBeenCalled();
       expect(renderBrandCardPng).not.toHaveBeenCalled();
       expect(renderMovieCardPng).not.toHaveBeenCalled();
       if (method === "GET") {
-        await expect(response.text()).resolves.toBe("Not Found");
+        const todayOgBody = await todayOg.text();
+        const unknownOgBody = await unknownOg.text();
+        expect(unknownOgBody).toBe("Not Found");
+        expect(todayOgBody).toBe(unknownOgBody);
       } else {
-        expect(response.body).toBeNull();
+        expect(todayOg.body).toBeNull();
+        expect(unknownOg.body).toBeNull();
       }
     });
   }

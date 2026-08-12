@@ -14,7 +14,7 @@ Cloudflare Worker for the movie Open Graph routes on `themoviecosmos.com`.
 | `GET /og/brand.png?v=og-brand-og-v1` | Brand fallback |
 | `GET /movie/:id` (HTML) | SPA `index.html` + injected `og:*` / `twitter:*` (no UA split) |
 
-> **Retired routes — do not execute as active setup:** `/today`, `/og/today.png`, and `/share/today` return side-effect-free `404 Not Found` for `GET` and `HEAD`, including query strings. Keep the retired paths bound to this Worker ahead of the Pages fallback so they cannot serve the SPA shell. Reuse requires an explicit contract migration.
+> **Retired Today URLs:** `/today` and `/share/today` are not Worker-owned; they follow Chronicle ordinary invalid-path handling. `/og/today.png` is an ordinary unknown path inside the active `/og/*` Worker namespace. Do not add a Today handler, redirect, SPA rewrite, KV read, brand fallback, or compatibility layer. Reuse requires an explicit contract migration.
 
 PNG: wrong or missing `v` → **302** to canonical URL (immutable edge cache).
 
@@ -68,16 +68,11 @@ npm run deploy        # production deploy (routes are managed in wrangler.toml)
 2. `npm run deploy` applies the Worker and the route configuration in `wrangler.toml`. The deploy token must include `Workers Routes: Edit`:
    - `themoviecosmos.com/og/*` → this worker
    - `themoviecosmos.com/movie/*` → this worker
-   - `themoviecosmos.com/today*` → this worker (retired-route guard; returns 404 before Pages fallback)
-   - `themoviecosmos.com/share/today*` → this worker (retired-route guard; returns 404 before Pages fallback)
 3. Smoke after deployment:
    - `curl -I "https://themoviecosmos.com/og/brand.png?v=og-brand-og-v1"`
    - `curl -s "https://themoviecosmos.com/movie/550" | findstr /i "og:image og:url og:title"`
-   - `curl -s -o NUL -w "%{http_code}" "https://themoviecosmos.com/today?lang=zh"` (expect `404`)
-   - `curl -s -o NUL -w "%{http_code}" "https://themoviecosmos.com/og/today.png?cache=bust"` (expect `404`)
-   - `curl -s -o NUL -w "%{http_code}" "https://themoviecosmos.com/share/today"` (expect `404`)
-   - `curl -s -o NUL -w "%{http_code}" "https://themoviecosmos.com/share/today?lang=zh"` (expect `404`)
-   - Repeat the two `/share/today` requests with `curl -I` to verify the `HEAD` path also returns `404` without an SPA response.
+   - Compare `GET`/`HEAD` `/og/today.png` and `/og/today.png?cache=bust` with `/og/unknown.png` (same query when present). Expect the same status, content type, and body as an ordinary unknown `/og/*` path, with no PNG or HTML payload.
+   - Compare `GET`/`HEAD` `/today`, `/today?lang=zh`, `/share/today`, and `/share/today?lang=zh` with `/unknown` (and `/unknown?lang=zh` for the query variants). Expect the same status, content-type/cache behavior, and body/SPA handling as that ordinary invalid Chronicle path. These URLs are not Worker-owned.
 
 ## Version algorithm (`v = {G}-{M}`)
 
@@ -105,4 +100,4 @@ Cross-repository breaking changes use a **coordinated best-effort cutover**, not
 
 For the Worker-only rollback procedure, see the [Chronicle current contract](https://github.com/XYBuilds/chronicle_v3_3d_galaxy/blob/main/docs/system/og-index-worker-contract.md). The historical [P34.9 测试与验收回滚指南](https://github.com/XYBuilds/chronicle_v3_3d_galaxy/blob/main/docs/guides/P34.9%20%E6%B5%8B%E8%AF%95%E4%B8%8E%E9%AA%8C%E6%94%B6%E5%9B%9E%E6%BB%9A%E6%8C%87%E5%8D%97.md) is evidence only; do not execute its Today recovery steps.
 
-Quick Worker-only rollback: deploy the last known-good Worker commit and its matching `wrangler.toml`. If the Pages fallback is intentionally accepted, remove the route entries through a reviewed configuration change; do not rely on an unmanaged Dashboard-only override. Keep the retired routes bound in the normal configuration so Pages cannot turn them back into SPA responses.
+Quick Worker-only rollback: deploy the last-known-good Worker commit and its matching `wrangler.toml`, restoring the two Today-specific route entries through reviewed Wrangler configuration. Do not use an unmanaged Dashboard-only override and do not mutate or delete KV state.

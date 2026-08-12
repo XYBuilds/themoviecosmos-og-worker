@@ -25,7 +25,7 @@ preview_id = "f4ccb8332a1e427f9929bb64e4ccc025"
 [assets]
 directory = "assets"
 binding = "ASSETS"
-# Route patterns overlap /og/*, /movie/*, and retired /today* and /share/today* → always run Worker first (PNG + HTML inject or 404).
+# Route patterns overlap /og/* and /movie/* → always run Worker first (PNG + HTML inject or 404).
 run_worker_first = true
 
 [vars]
@@ -39,14 +39,4 @@ zone_name = "themoviecosmos.com"
 
 [[routes]]
 pattern = "themoviecosmos.com/movie/*"
-zone_name = "themoviecosmos.com"
-
-[[routes]]
-pattern = "themoviecosmos.com/today*"
-zone_name = "themoviecosmos.com"
-
-# Cloudflare route patterns cannot contain query parameters, so the wildcard
-# is required to match /share/today?lang=zh as well as the retired exact path.
-[[routes]]
-pattern = "themoviecosmos.com/share/today*"
 zone_name = "themoviecosmos.com"

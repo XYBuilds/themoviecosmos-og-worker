@@ -6,13 +6,16 @@ const wranglerConfig = wranglerConfigSource.replace(/\r\n/g, "\n");
 const expectedRoutes = [
   "themoviecosmos.com/og/*",
   "themoviecosmos.com/movie/*",
-  "themoviecosmos.com/today*",
-  "themoviecosmos.com/share/today*",
 ] as const;
 
+function configuredRoutePatterns(source: string): string[] {
+  return [...source.matchAll(/^pattern = "([^"]+)"$/gm)].map((match) => match[1]!);
+}
+
 describe("Cloudflare route configuration", () => {
-  it("keeps every Worker-owned route in the executable Wrangler config", () => {
+  it("keeps only the active Worker-owned routes in the executable Wrangler config", () => {
     expect(wranglerConfig).toContain("run_worker_first = true");
+    expect(configuredRoutePatterns(wranglerConfig)).toEqual([...expectedRoutes]);
 
     for (const pattern of expectedRoutes) {
       expect(wranglerConfig).toContain(
