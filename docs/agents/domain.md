@@ -17,7 +17,8 @@ This is a single-context repository:
 /
 ├── CONTEXT.md
 ├── docs/adr/
-│   └── 0001-wrangler-managed-zone-routes.md
+│   ├── 0001-wrangler-managed-zone-routes.md
+│   └── 0002-retired-today-follows-chronicle-invalid-path.md
 └── src/
 ```
 
