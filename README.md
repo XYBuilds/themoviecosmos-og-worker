@@ -2,7 +2,7 @@
 
 Cloudflare Worker for the movie Open Graph routes on `themoviecosmos.com`.
 
-**Current cross-repository contract:** [Chronicle OG Index / OG Worker contract](https://github.com/XYBuilds/chronicle_v3_3d_galaxy/blob/main/docs/system/og-index-worker-contract.md). It defines the producer/consumer boundary and observable compatibility rules. This README remains authoritative for Worker-local implementation, configuration, testing, and deployment.
+**Current cross-repository contract:** [Chronicle OG Index / OG Worker contract](https://gitlab.com/yixie.ixd/chronicle_v3_3d_galaxy/-/blob/main/docs/system/og-index-worker-contract.md). It defines the producer/consumer boundary and observable compatibility rules. This README remains authoritative for Worker-local implementation, configuration, testing, and deployment.
 
 **Historical note:** Phase 34 deployment guides and plans are evidence only. Do not execute their Today steps; `/today`, `/og/today.png`, `/share/today`, and KV `today` are retired.
 
@@ -22,8 +22,8 @@ HTML: fetches production `/index.html` as shell; `og:url` matches request path +
 
 ## Prerequisites
 
-1. **Current OG Index contract:** [Chronicle `og-index-worker-contract.md`](https://github.com/XYBuilds/chronicle_v3_3d_galaxy/blob/main/docs/system/og-index-worker-contract.md).
-2. **P34.3 current movie-only KV projection:** KV namespace `OG_INDEX` populated with `meta:G` and `movie:*`. See [P34.3 OG Index KV 上线操作指南](https://github.com/XYBuilds/chronicle_v3_3d_galaxy/blob/main/docs/guides/P34.3%20OG%20Index%20KV%20上线操作指南.md).
+1. **Current OG Index contract:** [Chronicle `og-index-worker-contract.md`](https://gitlab.com/yixie.ixd/chronicle_v3_3d_galaxy/-/blob/main/docs/system/og-index-worker-contract.md).
+2. **P34.3 current movie-only KV projection:** KV namespace `OG_INDEX` populated with `meta:G` and `movie:*`. See [P34.3 OG Index KV 上线操作指南](https://gitlab.com/yixie.ixd/chronicle_v3_3d_galaxy/-/blob/main/docs/guides/P34.3%20OG%20Index%20KV%20%E4%B8%8A%E7%BA%BF%E6%93%8D%E4%BD%9C%E6%8C%87%E5%8D%97.md).
 3. Cloudflare account with Workers deploy permission.
 
 ## Setup
@@ -32,9 +32,9 @@ HTML: fetches production `/index.html` as shell; `og:url` matches request path +
 npm install
 ```
 
-**SSOT for secrets & KV namespace id:** `.env` (gitignored). Wrangler does **not** read `.env` by itself.
+**Secrets authority:** Bitwarden. Ignored `.env` values are replaceable deployment copies, not the secrets authority. Wrangler does **not** read `.env` by itself.
 
-1. Copy `.env.example` → `.env` and set `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN`, `OG_INDEX_KV_NAMESPACE_ID` (same as main-repo P34.3).
+1. Copy `.env.example` → `.env` and fill deployment copies of `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN`, and `OG_INDEX_KV_NAMESPACE_ID` from Bitwarden (same namespace as Chronicle P34.3).
 2. Deploy (loads `.env`, syncs `wrangler.toml` KV `id` from `.env`, then `wrangler deploy`):
 
 ```powershell
@@ -98,6 +98,7 @@ Cross-repository breaking changes use a **coordinated best-effort cutover**, not
 3. Retain newly written KV keys and values for diagnosis; do not delete production state as an emergency reflex.
 4. Repair or replay through the producer's explicit recovery path.
 
-For the Worker-only rollback procedure, see the [Chronicle current contract](https://github.com/XYBuilds/chronicle_v3_3d_galaxy/blob/main/docs/system/og-index-worker-contract.md). The historical [P34.9 测试与验收回滚指南](https://github.com/XYBuilds/chronicle_v3_3d_galaxy/blob/main/docs/guides/P34.9%20%E6%B5%8B%E8%AF%95%E4%B8%8E%E9%AA%8C%E6%94%B6%E5%9B%9E%E6%BB%9A%E6%8C%87%E5%8D%97.md) is evidence only; do not execute its Today recovery steps.
+For the Worker-only rollback procedure, see the [Chronicle current contract](https://gitlab.com/yixie.ixd/chronicle_v3_3d_galaxy/-/blob/main/docs/system/og-index-worker-contract.md). The historical [P34.9 测试与验收回滚指南](https://gitlab.com/yixie.ixd/chronicle_v3_3d_galaxy/-/blob/main/docs/guides/P34.9%20%E6%B5%8B%E8%AF%95%E4%B8%8E%E9%AA%8C%E6%94%B6%E5%9B%9E%E6%BB%9A%E6%8C%87%E5%8D%97.md) is evidence only; do not execute its Today recovery steps.
 
-Quick Worker-only rollback: deploy the last-known-good Worker commit and its matching `wrangler.toml`, restoring the two Today-specific route entries through reviewed Wrangler configuration. Do not use an unmanaged Dashboard-only override and do not mutate or delete KV state.
+Quick Worker-only rollback: deploy the last-known-good Worker commit and its matching `wrangler.toml` through reviewed Wrangler configuration. Do not restore retired Today routes (`/today`, `/share/today`, `/og/today.png`), the `today` KV key, or Today behavior. Do not use an unmanaged Dashboard-only override and do not mutate or delete KV state as an emergency reflex. Reintroducing Today names remains a new product Initiative and contract migration, not an incident rollback; see [ADR-0002](docs/adr/0002-retired-today-follows-chronicle-invalid-path.md).
+

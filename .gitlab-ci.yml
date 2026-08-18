@@ -1,0 +1,32 @@
+# OG Worker P0 non-deploying development adapter.
+# Production credentials, deployment, dry-run, and Worker runtime changes stay disabled.
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: never
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_COMMIT_BRANCH
+
+stages:
+  - verify
+
+default:
+  interruptible: true
+
+worker_verify:
+  stage: verify
+  image: node:24-bookworm
+  cache:
+    key:
+      files:
+        - package-lock.json
+    paths:
+      - .npm/
+  script:
+    - npm ci --cache .npm --prefer-offline --include=optional
+    - npm test
+    - npm run typecheck
+    - git diff --check
