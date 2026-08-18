@@ -24,5 +24,5 @@ Apply this rule only while the shared `execute-todo` or `execute-plan` Skill is 
 
 - Do not invent a plan status location or report path. Use the accepted plan's stated location; ask when absent.
 - Follow recent Conventional Commit style.
-- Publish through a GitHub PR and preserve required checks and branch protection.
-- A matching `execute-todo` or `execute-plan` command supplies standard Git delivery authorization, including merge; deployment still requires separate explicit authorization.
+- Publish through a GitLab merge request and preserve required checks and branch protection.
+- Human merge and Issue closure approval remain mandatory. Deployment still requires separate explicit authorization.
