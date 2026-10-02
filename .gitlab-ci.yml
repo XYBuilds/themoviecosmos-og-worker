@@ -1,14 +1,10 @@
 # OG Worker P0 non-deploying development adapter.
 # Production credentials, deployment, dry-run, and Worker runtime changes stay disabled.
 
+# GitHub cutback: predecessor pipelines remain disabled.
 workflow:
   rules:
-    - if: $CI_PIPELINE_SOURCE == "schedule"
-      when: never
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
-      when: never
-    - if: $CI_COMMIT_BRANCH
+    - when: never
 
 stages:
   - verify

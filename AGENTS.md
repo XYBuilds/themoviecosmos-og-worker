@@ -6,7 +6,7 @@ The OG Worker is an independently owned Cloudflare Worker for movie Open Graph r
 
 ### Issue tracker
 
-Issues live in the private OG Worker GitLab project. Use `glab` for Issue and merge-request operations. See [`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md). Provider Issue numbers and URLs are aliases; portable identities use `tmc:og-worker:<ULID>`.
+Issues live in the OG Worker GitHub repository under XYBuilds. Use `gh` for Issue and pull-request operations. See [`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md). Provider Issue numbers and URLs are aliases; portable identities use `tmc:og-worker:<ULID>`.
 
 ### Triage labels
 
@@ -24,8 +24,8 @@ Required delivery checks, regardless of host:
 
 - Work from an Issue-owned branch off an up-to-date default base (`main` unless otherwise specified).
 - Run the verification that matches the changed scope (`npm test`, `npm run typecheck`, and `npm run dry-run` only when packaging or deployment configuration changes and the required local environment is available). Never run `npm run deploy` without explicit deployment authorization. The secret-bearing deployment dry run is not required for non-deploying P0 gates.
-- Delivery Issues and merge requests must include an explicit human risk declaration (R0–R3 + protected surfaces). Do not invent a path classifier.
+- Delivery Issues and pull requests must include an explicit human risk declaration (R0–R3 + protected surfaces). Do not invent a path classifier.
 - Do not rewrite accepted ADRs as silent edits.
-- **Human merge and Issue closure approval are mandatory.** Agents may prepare evidence and open a merge request when authorized, but must not merge or close the Issue without explicit human approval.
+- **Human merge and Issue closure approval are mandatory.** Agents may prepare evidence and open a pull request when authorized, but must not merge or close the Issue without explicit human approval.
 
 Ignored `.env` values are replaceable Bitwarden deployment copies, not the secrets authority. Rollback follows C-002 and never restores retired Today routes, keys, or behavior.

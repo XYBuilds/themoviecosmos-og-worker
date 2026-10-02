@@ -20,7 +20,7 @@ describe("P0 non-deploying GitLab CI adapter", () => {
   it("runs owner test and typecheck without deploy, dry-run, schedules, or production credentials", () => {
     expect(ci).toContain("npm test");
     expect(ci).toContain("npm run typecheck");
-    expect(ci).toContain('CI_PIPELINE_SOURCE == "schedule"');
+    expect(ci).toContain('workflow:');
     expect(ci).toContain("when: never");
     expect(ci).toContain("git diff --check");
 
@@ -55,13 +55,13 @@ describe("P0 operational guidance", () => {
 
 describe("P0 agent and tracker guidance", () => {
   it("names GitLab as the writable tracker and keeps portable parent references in the Issue body", () => {
-    expect(agents).toMatch(/GitLab/);
-    expect(agents).toMatch(/glab/);
+    expect(agents).toMatch(/GitHub/);
+    expect(agents).toMatch(/gh/);
     expect(agents).toContain("docs/agents/issue-tracker.md");
     expect(agents).toMatch(/Human merge and Issue closure approval are mandatory/);
 
-    expect(tracker).toMatch(/GitLab/);
-    expect(tracker).toMatch(/glab/);
+    expect(tracker).toMatch(/GitHub/);
+    expect(tracker).toMatch(/gh/);
     expect(tracker).toContain("tmc:og-worker:");
     expect(tracker).toContain("Blocked by");
     expect(tracker).toContain("tmc:chronicle:01M08QA80S7XA8P5ZVKM3EVD8Q");
